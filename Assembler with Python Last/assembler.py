@@ -101,10 +101,16 @@ def main(assembly):
   #in this section,type 3 will be decoded.
   elif instruction in opcode_type_3.keys():
     try:
-      hexa_opCode   = binToHexa(opcode_type_3[instruction])
-      immediate_bin = deciToBin(reg[0])                     
-      hexa_immediate     = binToHexa(immediate_bin)
-      return hexa_opCode + hexa_immediate
+      if int(reg[0])>0:
+        hexa_opCode   = binToHexa(opcode_type_3[instruction])
+        immediate_bin = deciToBin(reg[0])                 
+        hexa_immediate     = binToHexa(immediate_bin)
+        return hexa_opCode + hexa_immediate
+      else:
+        hexa_opCode   = binToHexa(opcode_type_3[instruction])              
+        hexa_immediate     = binToHexa(bin(int(reg[0]) % (1<<8))[2:-4])+binToHexa(bin(int(reg[0]) % (1<<8))[-4:])
+        return hexa_opCode + hexa_immediate
+
     
     except Exception as e:
           return "Syntex Does not match!!"

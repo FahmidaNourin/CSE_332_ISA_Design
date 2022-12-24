@@ -13,4 +13,6 @@ beq $s0,4
 bne $s0,4
 slt $s0,$s1
 slti $s0,2
-j 20
+j -3
+j -2
+j 10
