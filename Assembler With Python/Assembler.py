@@ -1,6 +1,6 @@
 # a function to convert binary to hexadecimal
 def binToHexa(n):
-    return hex(int(n, 2))[2:]
+    return hex(int(n, 2))[2:]  # [2:] to remove 0x
 
 # a function to convert decimal to binary
 def deciToBin(n):
@@ -8,28 +8,30 @@ def deciToBin(n):
 
 def main(assembly):
   #opcode dictionary
-  opcode_type_1={   
+  opcode_type_1={      #op + register1 + rgister2
     "add"   : "0000",
     "sub"   : "0010",
-    "and"   : "0011",
-    "beq"   : "1010",
-    "bne"   : "1011",
-    "slt"   : "1100",
-    "bge"   : "1110"
+    "and"   : "0100",
+    "or"    : "0110",
+    "xor"   : "0111",
+    "nand"  : "1000",
+    "slt"   : "1101"
+    
   }
 
-  opcode_type_2 = {
+  opcode_type_2 = {     #op + register + imm
+    "beq"   : "1011",
+    "bne"   : "1100",    
     "addi"  : "0001",
-    "sll"   : "0100",
-    "lw"    : "0101",
-    "sw"    : "0110",
-    "slti"  : "1101"
+    "subi"  : "0011",
+    "sll"   : "0101",
+    "lw"    : "1001",
+    "sw"    : "1010",
+    "slti"  : "1110"
   }
 
-  opcode_type_3 = {
-    "in"    : "0111",
-    "out"   : "1000",
-    "disp"  : "1001",
+  opcode_type_3 = {     #op + register
+    #"disp"  : "1010",
     "j"     : "1111"
   }
 
@@ -50,8 +52,8 @@ def main(assembly):
     "$t5"   : "1101",
     "$t6"   : "1110",
     "$t7"   : "1111",
-    "l"     : "1000",   #default to t0
-
+   # "$in"   : "1110",   
+   # "$out"  : "1111"
   }
 
   gateway = list(assembly.lower().split(" "))
@@ -62,16 +64,13 @@ def main(assembly):
       instruction = gateway[0]
       reg=[gateway[1].replace(',', ''), gateway[2]]
 
-    elif gateway[0]=="disp":
-      instruction="disp"
-
     else:
       instruction = gateway[0]
       reg=gateway[1].split(",")
   except Exception as e:
       return "Syntex Does not match!!"
 
-  #in this section, R tyep register will be decoded.
+  #in this section,  type 1 will be decoded.
   if instruction in opcode_type_1.keys():
     try:
       hexa_opCode = binToHexa(opcode_type_1[instruction])
@@ -83,7 +82,7 @@ def main(assembly):
       return "Syntex Does not match!!"
 
 
-  #in this section, I tyep register will be decoded.
+  #in this section, type 2 will be decoded.
   elif instruction in opcode_type_2.keys():
     try:
       if int(reg[1],10)<=15:                #immediate can not be greater then 15 cause register hase only 4 bit
@@ -99,34 +98,25 @@ def main(assembly):
           return "Syntex Does not match!!"
 
 
-  #in this section, J tyep register will be decoded.
+  #in this section,type 3 will be decoded.
   elif instruction in opcode_type_3.keys():
     try:
-      if instruction=="disp":
+      if int(reg[0])>0:
         hexa_opCode   = binToHexa(opcode_type_3[instruction])
-        return hexa_opCode
-      
-      elif instruction == "in":
-        hexa_opCode   = binToHexa(opcode_type_3[instruction])
-        hexa_rs       = binToHexa(registers[reg[0]])
-        return hexa_opCode + hexa_rs + binToHexa("0000")
-      
-      elif instruction == "out":
-        hexa_opCode   = binToHexa(opcode_type_3[instruction])
-        hexa_rs       = binToHexa(registers[reg[0]])
-        return hexa_opCode + hexa_rs + binToHexa("0001")
-        
+        immediate_bin = deciToBin(reg[0])                 
+        hexa_immediate     = binToHexa(bin(int(reg[0]))[2:].zfill(8)[:4])+binToHexa(bin(int(reg[0]))[2:].zfill(8)[4:])
+        return hexa_opCode + hexa_immediate
       else:
-        hexa_opCode   = binToHexa(opcode_type_3[instruction])
-        hexa_rs       = binToHexa(registers[reg[0]])
-        return hexa_opCode + hexa_rs
+        hexa_opCode   = binToHexa(opcode_type_3[instruction])              
+        hexa_immediate     = binToHexa(bin(int(reg[0]) % (1<<8))[2:-4])+binToHexa(bin(int(reg[0]) % (1<<8))[-4:])
+        return hexa_opCode + hexa_immediate
+
     
     except Exception as e:
           return "Syntex Does not match!!"
 
-
   else:
-    return "Opcode did not match"
+       return "Opcode did not match"
 
 
 
@@ -137,7 +127,7 @@ output_file = input("Enter the name of Hexa text File: ")
 hex_list=[]
 
 try:
-  #reading the assembly.txt file
+  #reading the Input.txt file
   file1 = open(input_file, 'r')
   Lines = file1.readlines()
   for line in Lines:
